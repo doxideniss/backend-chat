@@ -1,30 +1,28 @@
-import mongoose from 'mongoose';
 import cors from 'cors';
 import express from 'express';
 import bodyParser from 'body-parser';
+import { createServer } from 'http';
+
+import './core/db';
+import createSocket from './core/socket';
+import { checkAuth, updateLastSeen } from "./middleware";
+import { UserRoute, DialogRoute, MessageRoute } from "./routers";
 
 const app = express();
-
-import { UserController, DialogController } from './controllers';
-
-mongoose.connect('mongodb+srv://doxi:Wolf5den@cluster0.xjojk.mongodb.net/chat?retryWrites=true&w=majority', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-});
+const http = createServer(app);
+const io = createSocket(http);
 
 app.use(bodyParser.json());
 app.use(cors());
+app.use(updateLastSeen);
+app.use(checkAuth);
 
-const User = new UserController();
-const Dialog = new DialogController();
+app.use('/user', UserRoute(io));
+app.use('/dialogs', DialogRoute(io));
+app.use('/messages', MessageRoute(io));
 
-app.get('/user/:id', User.show);
-app.post('/user/registration', User.create);
-app.delete('/user/:id', User.delete);
+const PORT = process.env.PORT ? Number(process.env.PORT) : '9999';
 
-app.get('/dialog/:id', Dialog.index);
-app.post('/dialog', Dialog.create);
-
-app.listen(9999, () => {
-  console.log('Server started on port - 9999!')
+http.listen(PORT, () => {
+  console.log(`Server started on port - ${PORT}!`)
 });

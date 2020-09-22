@@ -1,5 +1,6 @@
 import { isEmail } from "validator";
 import { Schema, model } from "mongoose";
+import { generateHash } from "../utils";
 
 const UserSchema = new Schema({
   email: {
@@ -21,9 +22,23 @@ const UserSchema = new Schema({
   },
   avatar: String,
   confirm_hash: String,
-  last_seen: Date
+  last_seen: {
+    type: Date,
+    default: new Date()
+  }
 }, {
   timestamps: true
+});
+
+UserSchema.pre('save', async function(next) {
+  const user = this;
+
+  if (!user.isModified("password")) {
+    return next();
+  }
+
+  user.password = await generateHash(user.password);
+  user.confirm_hash = await generateHash(new Date().toString());
 });
 
 const User = model('User', UserSchema);

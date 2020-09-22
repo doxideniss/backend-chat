@@ -1,0 +1,18 @@
+import socket from 'socket.io';
+
+export default (http) => {
+  const io = socket(http);
+
+  io.on('connection', function (socket) {
+    console.log('user conection');
+    socket.on('DIALOGS:JOIN', (dialogId) => {
+      socket.dialogId = dialogId;
+      socket.join(dialogId);
+    });
+    socket.on('DIALOGS:TYPING', (obj) => {
+      socket.broadcast.emit('DIALOGS:TYPING', obj);
+    });
+  });
+
+  return io;
+};
