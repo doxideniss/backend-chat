@@ -9,6 +9,7 @@ export default (io) => {
   router.get('/getMe', UserCtrl.getMe);
   router.get('/:id', UserCtrl.show);
   router.post('/signup', registerValidation, UserCtrl.create);
+  router.get('/signup/verify', UserCtrl.verify);
   router.post('/signin', loginValidation, UserCtrl.login);
   router.delete('/:id', UserCtrl.delete);
 

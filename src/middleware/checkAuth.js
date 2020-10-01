@@ -1,15 +1,15 @@
-import { verifyJWToken } from "../utils";
+import { verifyJWToken } from '../utils';
 
 export default (req, res, next) => {
   if (
-    req.path === "/user/signin" ||
-    req.path === "/user/signup" ||
-    req.path === "/user/verify"
+    req.path === '/user/signin' ||
+    req.path === '/user/signup' ||
+    req.path === '/user/signup/verify'
   ) {
     return next();
   }
 
-  const token = "token" in req.headers ? req.headers.token : null;
+  const token = 'token' in req.headers ? req.headers.token : null;
 
   if (token) {
     verifyJWToken(token)

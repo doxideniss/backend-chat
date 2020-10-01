@@ -12,7 +12,7 @@ export default (io) => {
           res.json(user)
         })
         .catch(() => {
-          res.status(404).json({
+          res.status(400).json({
             message: 'Not found'
           })
         })
@@ -21,8 +21,9 @@ export default (io) => {
       const id = req.user && req.user._id;
       UserModel.findById(id, (err, user) => {
         if (err || !user) {
-          return res.status(403).json({
-            message: "User not found",
+          return res.status(400).json({
+            status: 'error',
+            message: "Пользователь не найден",
           });
         }
         res.json(user);
@@ -52,9 +53,46 @@ export default (io) => {
           }
           res.status(400).json({
             status: 'error',
-            message: 'This email is already registered'
+            message: 'Этот E-mail уже зарегистрирован'
           })
         })
+    },
+    verify(req, res) {
+      const hash = req.query.hash;
+      if (!hash) {
+        res.status(400).json({
+          status: 'error',
+          message: 'Нету хеш ключа'
+        })
+      }
+      UserModel.findOne({ confirm_hash: hash }, (err, user) => {
+        if (err || !user) {
+          return res.status(400).json({
+            status: 'error',
+            message: "Хеш ключ недействителен",
+          });
+        }
+        if (user.confirmed) {
+          return res.status(400).json({
+            status: 'error',
+            message: "Этот аккаунт уже подтвержден!",
+          });
+        }
+        user.confirmed = true;
+        user.save((err) => {
+          if (err) {
+            return res.status(400).json({
+              status: "error",
+              message: err,
+            });
+          }
+
+          res.json({
+            status: "success",
+            message: "Аккаунт успешно подтвержден!",
+          });
+        });
+      });
     },
     login(req, res) {
       const errors = validationResult(req);
@@ -72,9 +110,9 @@ export default (io) => {
       }, (err, user) => {
         const comparePass = !!user && compareSync(postData.password, user.password);
         if (err || !comparePass) {
-          res.status(403).json({
+          res.status(400).json({
             status: 'error',
-            message: 'Incorrect email or password'
+            message: 'Неверный адрес электронной почты или пароль'
           });
         } else if (comparePass) {
           const token = createJWToken(user);
@@ -86,26 +124,6 @@ export default (io) => {
           })
         }
       })
-        // .then((user) => {
-        //   if (compareSync(postData.password, user.password)) {
-        //     const token = createJWToken(user);
-        //     res.json({
-        //       ...user,
-        //       token
-        //     })
-        //   } else {
-        //     res.status(403).json({
-        //       message: 'Incorrect email or password'
-        //     });
-        //   }
-        //
-        // })
-        // .catch((err) => {
-        //   console.log('not found');
-        //   res.status(403).json({
-        //     message: 'Incorrect email or password'
-        //   });
-        // });
     },
     delete(req, res) {
       const { id } = req.params;
@@ -116,9 +134,10 @@ export default (io) => {
           })
         })
         .catch(() => {
-          res.status(404).json({
-            message: 'Not found'
-          })
+          res.status(400).json({
+            status: 'error',
+            message: "Пользователь не найден",
+          });
         })
     }
   }
