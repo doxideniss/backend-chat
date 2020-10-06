@@ -1,36 +1,49 @@
 import { isEmail } from "validator";
 import { Schema, model } from "mongoose";
+import { differenceInMinutes } from "date-fns";
+
 import { generateHash } from "../utils";
 
-const UserSchema = new Schema({
-  email: {
-    type: String,
-    required: 'Email address is required',
-    validate: [isEmail, 'Please fill a valid email address'],
+const UserSchema = new Schema(
+  {
+    email: {
+      type: String,
+      required: "Email address is required",
+      validate: [isEmail, "Please fill a valid email address"],
+    },
+    fullName: {
+      type: String,
+      required: "Full name is required",
+    },
+    password: {
+      type: String,
+      required: "Password is required",
+    },
+    confirmed: {
+      type: Boolean,
+      default: false,
+    },
+    avatar: String,
+    confirm_hash: String,
+    last_seen: {
+      type: Date,
+      default: new Date(),
+    },
   },
-  fullName: {
-    type: String,
-    required: 'Full name is required'
-  },
-  password: {
-    type: String,
-    required: 'Password is required'
-  },
-  confirmed: {
-    type: Boolean,
-    default: false
-  },
-  avatar: String,
-  confirm_hash: String,
-  last_seen: {
-    type: Date,
-    default: new Date()
+  {
+    timestamps: true,
   }
-}, {
-  timestamps: true
+);
+
+UserSchema.virtual("isOnline").get(function () {
+  return differenceInMinutes(new Date(), this.last_seen) < 5;
 });
 
-UserSchema.pre('save', async function(next) {
+UserSchema.set("toJSON", {
+  virtuals: true,
+});
+
+UserSchema.pre("save", async function (next) {
   const user = this;
 
   if (!user.isModified("password")) {
@@ -41,6 +54,6 @@ UserSchema.pre('save', async function(next) {
   user.confirm_hash = await generateHash(new Date().toString());
 });
 
-const User = model('User', UserSchema);
+const User = model("User", UserSchema);
 
 export default User;

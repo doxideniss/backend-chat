@@ -7,10 +7,10 @@ export default (io) => {
   const router = Router();
 
   router.get('/getMe', UserCtrl.getMe);
-  router.get('/:id', UserCtrl.show);
-  router.post('/signup', registerValidation, UserCtrl.create);
   router.get('/signup/verify', UserCtrl.verify);
+  router.post('/signup', registerValidation, UserCtrl.create);
   router.post('/signin', loginValidation, UserCtrl.login);
+  router.get('/:id', UserCtrl.show);
   router.delete('/:id', UserCtrl.delete);
 
   return router;

@@ -14,8 +14,8 @@ const io = createSocket(http);
 
 app.use(bodyParser.json());
 app.use(cors());
-app.use(updateLastSeen);
 app.use(checkAuth);
+app.use(updateLastSeen);
 
 app.use('/user', UserRoute(io));
 app.use('/dialogs', DialogRoute(io));

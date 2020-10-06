@@ -2,6 +2,7 @@ import { UserModel } from "../models";
 import { createJWToken } from "../utils";
 import { validationResult } from "express-validator";
 import { compareSync } from "bcrypt";
+import transporter from "../core/mailer";
 
 export default (io) => {
   return {
@@ -47,7 +48,18 @@ export default (io) => {
             const user = new UserModel(postData);
             return user.save()
               .then((obj) => {
-                res.json(obj);
+                transporter.sendMail({
+                  from: 'admin@text.com',
+                  to: postData.email,
+                  subject: 'Подтвердите E-mail',
+                  html: `<p>Регистрация завершена</p><div><a href="${process.env.NODEMAILER_URL}${obj.confirm_hash}">Подтвердите Аккаунт</a></div>`
+                }, (err, info) => {
+                  err && console.log(err);
+                  console.log(info);
+                })
+                res.json({
+                  status: 'success'
+                });
               })
               .catch((err) => res.json(err));
           }
